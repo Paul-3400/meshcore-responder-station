@@ -1,0 +1,16 @@
+[Unit]
+Description=MeshCore DM-Responder
+After=network.target
+
+[Service]
+Type=simple
+User=paul-rppi
+WorkingDirectory=/home/paul-rppi
+ExecStart=/usr/bin/python3 /home/paul-rppi/dm_listener.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
