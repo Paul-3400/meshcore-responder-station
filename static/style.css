@@ -1,0 +1,75 @@
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:900px;margin:40px auto;padding:20px;background:#1a1a2e;color:#eee}
+h1{color:#00d4aa}
+h2{color:#00d4aa;margin-top:30px}
+a{color:#00d4aa}
+nav{margin:15px 0;padding:10px 0;border-bottom:1px solid #2a2a4a}
+nav a{margin-right:20px;text-decoration:none;font-weight:bold}
+.card{background:#16213e;border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #00d4aa}
+.card h3{color:#00d4aa;margin-top:0}
+.badge-green{display:inline-block;padding:4px 10px;border-radius:8px;font-size:0.85em;font-weight:bold;background:#00d4aa;color:#000}
+.badge-orange{display:inline-block;padding:4px 10px;border-radius:8px;font-size:0.85em;font-weight:bold;background:#f5a623;color:#000}
+table{width:100%;border-collapse:collapse}
+td,th{padding:8px;border-bottom:1px solid #2a2a4a;text-align:left}
+th{color:#00d4aa;font-size:0.9em}
+td:first-child{color:#888}
+.log-table{font-size:0.85em;overflow-x:auto}
+footer,.footer{color:#888;font-size:0.85em;margin-top:30px}
+
+/* Legende unter CSV-Tabellen */
+.legend {
+    font-size: 0.9em;
+    color: inherit;
+    margin: 0.5em 0;
+    line-height: 1.6;
+}
+
+/* === v2.3 Ergaenzungen === */
+.error {
+    color: #cc0000;
+    font-weight: bold;
+    padding: 8px;
+    background: #ffe0e0;
+    border-radius: 4px;
+}
+.success {
+    color: #006600;
+    font-weight: bold;
+    padding: 8px;
+    background: #e0ffe0;
+    border-radius: 4px;
+}
+.btn-warning {
+    background: #cc6600;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.btn-warning:hover {
+    background: #ff8800;
+}
+.hint {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+input, textarea, select {
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+button[type="submit"] {
+    background: #336699;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+button[type="submit"]:hover {
+    background: #4488bb;
+}

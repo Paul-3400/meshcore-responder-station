@@ -1,0 +1,19 @@
+# Credentials (niemals auf GitHub!)
+auth.conf
+
+# Laufzeitdaten
+data/*.CSV
+data/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS-Dateien
+.DS_Store
+Thumbs.db
+
+# Editor-Backups
+*.swp
+*~

@@ -1,0 +1,16 @@
+[Unit]
+Description=MeshCore DM Responder + Web Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/paul-rppi/meshcore-responder
+ExecStart=/usr/bin/python3 -u /home/paul-rppi/meshcore-responder/dm_listener.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

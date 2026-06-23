@@ -1,0 +1,19 @@
+# ============================================================
+# MeshCore Responder-Station - Konfiguration
+# Kopiere diese Datei als 'station.conf' und passe die Werte an.
+# cp station.conf.example station.conf
+# ============================================================
+
+[station]
+name = MeineStation
+callsign = HB9XXX
+qth = JN47AB
+altitude = 500
+lat = 46.9480
+lon = 7.4474
+
+[reply]
+template = Hallo {sender}! Station {name} ({callsign}) QTH:{qth} {alt}m | {date} {time} | Signal: {signal} | Env: T={temp}C H={hum}% P={pressure}hPa TP={dewpoint}C
+
+[sensor]
+env_interval = 12

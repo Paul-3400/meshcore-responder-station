@@ -1,0 +1,15 @@
+[Unit]
+Description=Hotspot Toggle Button Service
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=/usr/bin/python3 -u /home/paul-rppi/meshcore-responder/hotspot_button.py
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
