@@ -39,21 +39,35 @@ led = LED(LED_PIN)
 # HOTSPOT EIN/AUS
 # ============================================================
 def hotspot_start():
-    """Startet den WLAN-Hotspot (hostapd + dnsmasq)."""
-    subprocess.run(["sudo", "systemctl", "start", "hostapd"], capture_output=True)
+    """Stoppt NetworkManager, setzt IP, startet hostapd direkt + dnsmasq."""
+    # NM komplett stoppen - gibt wlan0 frei
+    subprocess.run(["sudo", "systemctl", "stop", "NetworkManager"], capture_output=True)
+    time.sleep(2)
+    # Statische IP fuer AP setzen
+    subprocess.run(["sudo", "ip", "addr", "flush", "dev", "wlan0"], capture_output=True)
+    subprocess.run(["sudo", "ip", "addr", "add", "10.0.50.1/24", "dev", "wlan0"], capture_output=True)
+    subprocess.run(["sudo", "ip", "link", "set", "wlan0", "up"], capture_output=True)
+    time.sleep(1)
+    # hostapd DIREKT starten (nicht via systemctl!)
+    subprocess.Popen(["sudo", "hostapd", "/etc/hostapd/hostapd.conf"])
+    time.sleep(2)
+    # dnsmasq via systemctl (das funktioniert)
     subprocess.run(["sudo", "systemctl", "start", "dnsmasq"], capture_output=True)
     led.on()
     ts = time.strftime("%H:%M:%S")
-    print(f"\U0001f4e1 [{ts}] Hotspot EIN - Timeout {HOTSPOT_TIMEOUT} Min")
+    print(f"\U0001f4e1 [{ts}] Hotspot EIN - AP: 10.0.50.1 - Timeout {HOTSPOT_TIMEOUT} Min")
+    return True
 
 def hotspot_stop():
-    """Stoppt Hotspot und stellt Client-WLAN wieder her via NetworkManager."""
+    """Stoppt hostapd + dnsmasq, startet NetworkManager."""
     led.off()
-    subprocess.run(["sudo", "systemctl", "stop", "hostapd"], capture_output=True)
+    subprocess.run(["sudo", "pkill", "hostapd"], capture_output=True)
     subprocess.run(["sudo", "systemctl", "stop", "dnsmasq"], capture_output=True)
-    subprocess.run(["sudo", "systemctl", "restart", "NetworkManager"], capture_output=True)
+    time.sleep(1)
+    # NM wieder starten - verbindet automatisch mit RoPa Net
+    subprocess.run(["sudo", "systemctl", "start", "NetworkManager"], capture_output=True)
     ts = time.strftime("%H:%M:%S")
-    print(f"\U0001f4f4 [{ts}] Hotspot AUS - NetworkManager neu gestartet")
+    print(f"\U0001f4f4 [{ts}] Hotspot AUS - NetworkManager gestartet")
 
 # ============================================================
 # TIMER - Automatische Abschaltung nach 90 Minuten
@@ -91,9 +105,10 @@ def button_pressed():
     global hotspot_active
     if not hotspot_active:
         # --- Hotspot einschalten + Timer starten ---
-        hotspot_start()
-        start_timer()
-        hotspot_active = True
+        if hotspot_start():
+            start_timer()
+            hotspot_active = True
+        # Falls False: nichts passiert, Pi bleibt im Client-Modus
     else:
         # --- Hotspot sofort ausschalten + Timer abbrechen ---
         cancel_timer()
