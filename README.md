@@ -260,12 +260,28 @@ Beispiel: http://10.0.1.167:5000
 
 ### Funktionsweise
 
-Der Pi Zero W hat nur ein WLAN-Interface (wlan0). Der Hotspot-Modus
-unterbricht die regulaere WLAN-Verbindung.
+Der Pi Zero W hat nur ein WLAN-Interface (wlan0). Im Hotspot-Modus wird
+NetworkManager gestoppt und hostapd direkt gestartet (nicht via systemctl,
+da der hostapd-Service unter Trixie fehlerhaft ist).
 
 - Taster 1x druecken: Hotspot EIN, LED AN, Timer 90 Min laeuft
 - Taster nochmal druecken: Hotspot sofort AUS, LED AUS
 - Nach 90 Minuten: Hotspot automatisch AUS, LED AUS
+
+### Ablauf intern
+
+EIN:
+1. NetworkManager wird gestoppt (gibt wlan0 frei)
+2. wlan0 bekommt statische IP 10.0.50.1/24
+3. hostapd wird direkt gestartet (subprocess.Popen)
+4. dnsmasq wird gestartet (DHCP fuer Clients)
+5. LED AN
+
+AUS:
+1. LED AUS
+2. hostapd wird per pkill gestoppt
+3. dnsmasq wird gestoppt
+4. NetworkManager wird gestartet (verbindet automatisch mit Home-WLAN)
 
 ### WLAN-Reconnect nach Hotspot-Abschaltung
 
@@ -275,12 +291,24 @@ Client-WLAN-Verbindung wiederherzustellen. Dies dauert einige Sekunden
 Die LED erlischt sofort bei Abschaltung, die Netzwerkverbindung folgt
 kurz darauf.
 
+### Hotspot-Zugangsdaten
+
+- SSID: Responder-Station
+- Passwort: MeshField2026 (WPA2-PSK)
+- Dashboard: http://10.0.50.1:5000
+
 ### Hotspot-Netzwerk konfigurieren
 
-Die Hotspot-Konfiguration erfolgt ueber hostapd und dnsmasq:
-
     sudo nano -lmi /etc/hostapd/hostapd.conf
-    sudo nano -lmi /etc/dnsmasq.conf
+
+### Wichtiger Hinweis (Trixie-Bug)
+
+Der hostapd systemd-Service funktioniert unter Raspberry Pi OS 13 (Trixie)
+nicht korrekt. hostapd wird daher direkt als Prozess gestartet.
+Falls /etc/default/hostapd angepasst werden soll:
+
+    sudo nano -lmi /etc/default/hostapd
+    # DAEMON_CONF="/etc/hostapd/hostapd.conf"
 
 ---
 
