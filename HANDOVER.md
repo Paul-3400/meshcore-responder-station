@@ -93,3 +93,57 @@ Pfad: /home/paul-rppi/meshcore-responder/
 2. Logs pruefen: sudo journalctl -u dm-responder --no-pager -n 20
 3. Bug fixen: /change-password
 4. Danach: Session-Timeout + CSS-Klassen angleichen
+
+
+# HANDOVER – MeshCore Responder-Station v2.3
+
+Built as a "brain gym" project – keeping the mind sharp through electronics and code. 🧠💪
+by Paul and Claude, Anthropic 2026
+
+## Session: 25. Juni 2026 (Abend)
+
+### Problem
+Nach Ausschalten und Wiedereinschalten der Station:
+- Pi startete im Hotspot-Modus statt sich mit Home-WLAN zu verbinden
+- Nicht erreichbar via SSH/RPi Connect
+- LED-State out-of-sync
+
+### Root Causes
+1. `hostapd.service` war **enabled** → startete beim Boot → übernahm wlan0
+2. WLAN-Profil "RoPa Net" fehlte in `/etc/NetworkManager/system-connections/`
+
+### Fixes angewendet
+1. `sudo systemctl disable hostapd` → startet nicht mehr beim Boot
+2. `/etc/NetworkManager/system-connections/RoPaNet.nmconnection` manuell erstellt
+3. `hotspot_button.py` startet hostapd **direkt** (nicht via systemctl, Trixie-Bug)
+
+### Geänderte Dateien
+| Datei | Änderung |
+|-------|----------|
+| `hotspot_button.py` | hostapd via Popen, pkill zum Stoppen, NM stop/start |
+| `/etc/NetworkManager/system-connections/RoPaNet.nmconnection` | NEU erstellt |
+| `/etc/default/hostapd` | DAEMON_CONF gesetzt (hilft nicht, aber dokumentiert) |
+
+### Aktueller Zustand
+- ✅ Boot → verbindet automatisch mit RoPa Net (10.0.1.167)
+- ✅ Taster → Hotspot EIN (Responder-Station, 10.0.50.1)
+- ✅ Taster → Hotspot AUS → zurück zu RoPa Net
+- ✅ 90-Min-Timeout funktioniert
+- ✅ Dashboard erreichbar (beide Netzwerke)
+- ✅ MeshCore Radio verbunden (/dev/ttyACM0)
+- ✅ hostapd.service disabled
+- ✅ GitHub Repo aktualisiert
+
+### Offene Punkte
+- `/change-password` → 500 Error (Bug in `auth.py`)
+- LED-State nach manuellem Service-Restart prüfen
+
+### Hotspot-Zugangsdaten
+- SSID: Responder-Station
+- Passwort: MeshField2026
+- Dashboard: http://10.0.50.1:5000 (Field) / http://10.0.1.167:5000 (Lokal)
+
+### Wichtiger Hinweis (Trixie-Bug)
+Der `hostapd` systemd-Service funktioniert unter Raspberry Pi OS 13 (Trixie)
+nicht korrekt. hostapd wird daher direkt als Prozess gestartet/gestoppt
+(subprocess.Popen / pkill). Dies ist ein bekannter Workaround.
