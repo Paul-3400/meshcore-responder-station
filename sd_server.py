@@ -201,7 +201,7 @@ def change_password():
         elif new_pw != confirm_pw:
             msg = '<p class="msg-err">❌ Neue Passwoerter stimmen nicht ueberein.</p>'
         else:
-            auth.change_password(username, new_pw)
+            auth.change_password(new_pw)
             msg = '<p class="msg-ok">✅ Passwort erfolgreich geaendert!</p>'
 
     html = f'''<html><head><title>Passwort aendern</title>{CSS}</head><body>
