@@ -1,149 +1,64 @@
-# HANDOVER - MeshCore Responder-Station v2.3
-
-Session: 23. Juni 2026
-Erstellt von Paul mit Claude (Anthropic, 2026)
-
----
-
-## Status: v2.3 deployed + GitHub gepusht
-
-Repo: https://github.com/Paul-3400/meshcore-responder-station
-Commit: v2.3 - Web-Config mit Login, Hotspot-Toggle 90min, dynamisches Sensor-Intervall
-12 Dateien, 2029 Zeilen
-
----
-
-## Erledigte Schritte (Session 23.06.2026)
-
-1. sd_server.py v2.3 komplett neu geschrieben (Login, Config, Restart, Navigation)
-2. CSS ausgelagert als static/style.css (war bereits vorhanden)
-3. Footer-Styling angepasst (color #888, font-size 0.85em)
-4. env_interval: dm_listener.py liest dynamisch aus station.conf (Duplikat-Funktion entfernt)
-5. hotspot_button.py neu geschrieben mit gpiozero (RPi.GPIO inkompatibel mit Trixie)
-6. Hotspot-Bug gefixt: NetworkManager restart nach hostapd stop (WLAN-Reconnect)
-7. LED-Bug gefixt: led.off() vor subprocess-Aufrufen
-8. Alter hotspot-toggle.service auf neuen Pfad umgebogen
-9. README.md ausfuehrlich erstellt (320 Zeilen, Setup-Anleitung fuer andere User)
-10. .gitignore + station.conf.example erstellt
-11. Sauberes Repo auf GitHub gepusht (force push, clean history)
-
----
-
-## OFFENER BUG
-
-### /change-password -> 500 Internal Server Error
-
-- Route: /change-password in sd_server.py
-- Symptom: 500 Error beim Aufruf der Seite (auch GET schlaegt fehl)
-- Vermutete Ursache: auth.py hat keine Funktion change_password()
-  ODER der @auth.login_required Decorator wirft Exception
-- Diagnose noetig:
-  sudo journalctl -u dm-responder --no-pager -n 20
-  grep -n "change_password\|login_required" /home/paul-rppi/meshcore-responder/auth.py
-
----
-
-## Offene Pendenzen
-
-1. BUG FIXEN: /change-password (500 Error)
-2. Session-Timeout: @before_request Hook in sd_server.py einbauen
-   (prueft session['login_time'] gegen 90 Min Timeout)
-3. CSS-Klassen pruefen: style.css hat .error/.success,
-   sd_server.py nutzt .msg-ok/.msg-err - angleichen!
-4. Config-Seite testen: Werte aendern + speichern + verifizieren
-5. Restart-Button testen: Service-Neustart via Web
-
----
-
-## Dateien auf dem Pi
-
-Pfad: /home/paul-rppi/meshcore-responder/
-
-- dm_listener.py (v2.2 - unveraendert ausser get_env_interval Duplikat entfernt)
-- sd_server.py (v2.3 - komplett neu)
-- hotspot_button.py (v2.3 - neu mit gpiozero)
-- file_store.py (unveraendert)
-- auth.py (v2.3 - zu pruefen!)
-- station.conf
-- static/style.css
-- README.md
-- HANDOVER.md (diese Datei)
-
----
-
-## Services
-
-- dm-responder.service -> dm_listener.py (startet auch Flask via sd_server.py)
-- hotspot-toggle.service -> hotspot_button.py
-
----
-
-## Netzwerk
-
-- Pi IP: 10.0.1.167
-- Web-Dashboard: http://10.0.1.167:5000
-- SSH: paul-rppi@10.0.1.167
-- Default Login: admin / admin (NICHT geaendert wegen Bug)
-
----
-
-## Naechste Session starten mit
-
-1. auth.py als PDF von GitHub herunterladen und an Chat anhaengen
-2. Logs pruefen: sudo journalctl -u dm-responder --no-pager -n 20
-3. Bug fixen: /change-password
-4. Danach: Session-Timeout + CSS-Klassen angleichen
-
-
 # HANDOVER – MeshCore Responder-Station v2.3
 
 Built as a "brain gym" project – keeping the mind sharp through electronics and code. 🧠💪
 by Paul and Claude, Anthropic 2026
 
-## Session: 25. Juni 2026 (Abend)
+## Session: 26. Juni 2026
 
-### Problem
-Nach Ausschalten und Wiedereinschalten der Station:
-- Pi startete im Hotspot-Modus statt sich mit Home-WLAN zu verbinden
-- Nicht erreichbar via SSH/RPi Connect
-- LED-State out-of-sync
+### Behobene Bugs
 
-### Root Causes
-1. `hostapd.service` war **enabled** → startete beim Boot → übernahm wlan0
-2. WLAN-Profil "RoPa Net" fehlte in `/etc/NetworkManager/system-connections/`
-
-### Fixes angewendet
-1. `sudo systemctl disable hostapd` → startet nicht mehr beim Boot
-2. `/etc/NetworkManager/system-connections/RoPaNet.nmconnection` manuell erstellt
-3. `hotspot_button.py` startet hostapd **direkt** (nicht via systemctl, Trixie-Bug)
+| # | Problem | Ursache | Fix |
+|---|---------|---------|-----|
+| 1 | Hotspot startet beim Boot | hostapd.service enabled | `sudo systemctl disable hostapd` |
+| 2 | Pi verbindet nicht mit Home-WLAN | WLAN-Profil "RoPa Net" fehlte | `RoPaNet.nmconnection` manuell erstellt |
+| 3 | hostapd via systemctl funktioniert nicht | Trixie-Bug, DAEMON_CONF leer | hostapd direkt via subprocess.Popen starten |
+| 4 | /change-password → 500 Error | Argument-Mismatch in sd_server.py | `auth.change_password(new_pw)` statt 2 Argumente |
 
 ### Geänderte Dateien
+
 | Datei | Änderung |
 |-------|----------|
-| `hotspot_button.py` | hostapd via Popen, pkill zum Stoppen, NM stop/start |
+| `hotspot_button.py` | hostapd via Popen starten, pkill zum Stoppen, NM stop/start |
+| `sd_server.py` | Zeile 204: `auth.change_password(new_pw)` (username entfernt) |
 | `/etc/NetworkManager/system-connections/RoPaNet.nmconnection` | NEU erstellt |
-| `/etc/default/hostapd` | DAEMON_CONF gesetzt (hilft nicht, aber dokumentiert) |
+| `/etc/default/hostapd` | DAEMON_CONF gesetzt (dokumentiert) |
 
 ### Aktueller Zustand
+
 - ✅ Boot → verbindet automatisch mit RoPa Net (10.0.1.167)
-- ✅ Taster → Hotspot EIN (Responder-Station, 10.0.50.1)
+- ✅ Taster → Hotspot EIN (SSID: Responder-Station, 10.0.50.1)
 - ✅ Taster → Hotspot AUS → zurück zu RoPa Net
 - ✅ 90-Min-Timeout funktioniert
 - ✅ Dashboard erreichbar (beide Netzwerke)
 - ✅ MeshCore Radio verbunden (/dev/ttyACM0)
+- ✅ /change-password funktioniert
 - ✅ hostapd.service disabled
 - ✅ GitHub Repo aktualisiert
 
-### Offene Punkte
-- `/change-password` → 500 Error (Bug in `auth.py`)
-- LED-State nach manuellem Service-Restart prüfen
+### Keine offenen Punkte 🎉
+
+### Netzwerk-Zugang
+
+| Modus | IP | Zugang |
+|-------|-----|--------|
+| Lokal (RoPa Net) | 10.0.1.167 | SSH, Dashboard :5000 |
+| Field (Hotspot) | 10.0.50.1 | SSH, Dashboard :5000 |
 
 ### Hotspot-Zugangsdaten
+
 - SSID: Responder-Station
-- Passwort: MeshField2026
-- Dashboard: http://10.0.50.1:5000 (Field) / http://10.0.1.167:5000 (Lokal)
+- Passwort: MeshField2026 (WPA2-PSK)
 
 ### Wichtiger Hinweis (Trixie-Bug)
-Der `hostapd` systemd-Service funktioniert unter Raspberry Pi OS 13 (Trixie)
+
+Der hostapd systemd-Service funktioniert unter Raspberry Pi OS 13 (Trixie)
 nicht korrekt. hostapd wird daher direkt als Prozess gestartet/gestoppt
-(subprocess.Popen / pkill). Dies ist ein bekannter Workaround.
+(subprocess.Popen / pkill). Dies ist ein dokumentierter Workaround.
+
+### Services
+
+| Service | Funktion |
+|---------|----------|
+| `dm-responder.service` | Flask Dashboard + MeshCore Radio |
+| `hotspot-toggle.service` | Taster-Steuerung für Hotspot |
+| `NetworkManager` | WLAN-Client (RoPa Net) |
